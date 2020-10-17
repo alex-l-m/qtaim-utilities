@@ -41,7 +41,8 @@ for line in open(sys.argv[1]):
     print(line, end="")
     if re.search(": *$", line) is not None and \
             (state == "other" or state == "variable_description_line" or \
-            state == "variable_description_interruption" or state == "possible_title"):
+            state == "variable_description_interruption" or state == "possible_title" \
+            or state == "blank_after_total"):
         state = "possible_title"
     elif re.match("^-+ *$", line) is not None:
         if state == "possible_title":
@@ -62,6 +63,15 @@ for line in open(sys.argv[1]):
         state = "variable_description_interruption"
     elif re.search(r"\w+", line) is not None and \
             (state == "dashes_after_header" or state == "data_row"):
+        state = "data_row"
+    elif re.search("Total", line) is not None and \
+            (state == "dashes_after_data" or state == "blank_after_total"):
+        state = "total_line"
+    elif re.match("^ *$", line) is not None and \
+            state == "total_line":
+        state = "blank_after_total"
+    elif "=" not in line and ":" not in line and \
+            re.match("^ *$", line) is None and state == "blank_after_total":
         state = "data_row"
     else:
         state = "other"
