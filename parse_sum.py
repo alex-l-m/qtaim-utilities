@@ -1,24 +1,29 @@
 import re
 import sys
+import csv
+
+variable_description_re = r"^ *([^ ^=][^=]*[^ ^=]) *= *([^ ^=][^=]*[^ ^=])"
 
 def parse_variables(lines):
     variable_description_dict = dict()
     for line in lines:
         variable, description = \
-                re.match(r"^ *([^ ^=][^=]*[^ ^=]) *= *([^ ^=][^=]*[^ ^=])", line).groups()
+                re.match(variable_description_re, line).groups()
         variable_description_dict.update([(variable.strip(), description.strip())])
     return variable_description_dict
 
-def parse_atomic_properties(header, rows, variable_description_dict):
+def parse_atomic_properties(title, header, rows, variable_description_dict):
     atom_colnames = []
-    for atom_colname in ["Atom A", "Atom B", "Atom C"]:
+    for atom_colname in ["Atom", "Atom A", "Atom B", "Atom C"]:
         if atom_colname in header:
             atom_colnames.append(atom_colname)
     colnames = atom_colnames + list(variable_description_dict.keys())
     colname_starts = [header.find(variable) for variable in colnames]
     colname_ends = [start + len(variable) for start, variable in zip(colname_starts, colnames)]
     colname_middles = [(start + end)/2 for start, end in zip(colname_starts, colname_ends)]
-    property_table = []
+    one_atom_property_table = []
+    two_atom_property_table = []
+    three_atom_property_table = []
     for row in rows:
         atom_table = []
         for match in re.finditer(r"[^ ]+\b", row):
@@ -32,14 +37,30 @@ def parse_atomic_properties(header, rows, variable_description_dict):
                 atom_table.append((variable, match.group(0)))
             else:
                 atom_names = [i[1] for i in sorted(atom_table, key=lambda x: x[0])]
-                property_table.append(atom_names + [variable, match.group(0)])
-    return property_table
+                line = [title] + atom_names + [variable, match.group(0)]
+                if len(atom_names) == 1:
+                    one_atom_property_table.append(line)
+                elif len(atom_names) == 2:
+                    two_atom_property_table.append(line)
+                elif len(atom_names) == 3:
+                    three_atom_property_table.append(line)
+    return one_atom_property_table, two_atom_property_table, three_atom_property_table
+
+
 
 state = "other"
 
+title_buffer= None
+possible_title_buffer = None
+variable_buffer = []
+header_buffer = None
+data_row_buffer = []
+one_atom_property_table = []
+two_atom_property_table = []
+three_atom_property_table = []
+
 for line in open(sys.argv[1]):
-    print(line, end="")
-    if re.search(": *$", line) is not None and \
+    if re.match("^[^ ].*: *$", line) is not None and \
             (state == "other" or state == "variable_description_line" or \
             state == "variable_description_interruption" or state == "possible_title" \
             or state == "blank_after_total"):
@@ -53,7 +74,7 @@ for line in open(sys.argv[1]):
             state = "dashes_after_header"
         elif state == "data_row":
             state = "dashes_after_data"
-    elif re.search("=", line) is not None and \
+    elif re.match(variable_description_re, line) is not None and \
             (state == "dashes_after_title" or state == "variable_description_line" or \
             state == "variable_description_interruption" or state == "possible_title"):
         state = "variable_description_line"
@@ -75,4 +96,41 @@ for line in open(sys.argv[1]):
         state = "data_row"
     else:
         state = "other"
-    print(state, end="\n\n")
+
+    # Parse the table if we are no longer in a table
+    # Can't do this in a possible title because those can occur during variable
+    # descriptions
+    if state == "other" or state == "dashes_after_title":
+        if len(data_row_buffer) > 0:
+            this_one_atom_property_table, this_two_atom_property_table, this_three_atom_property_table = \
+                    parse_atomic_properties(title_buffer, header_buffer, data_row_buffer, \
+                    parse_variables(variable_buffer))
+            one_atom_property_table += this_one_atom_property_table
+            two_atom_property_table += this_two_atom_property_table
+            three_atom_property_table += this_three_atom_property_table
+        title_buffer= None
+        variable_buffer = []
+        header_buffer = None
+        data_row_buffer = []
+
+    if state == "possible_title":
+        possible_title_buffer = re.match("[^:]*", line).group(0).strip()
+    if state == "dashes_after_title":
+        title_buffer = possible_title_buffer
+    elif state == "variable_description_line":
+        variable_buffer.append(line)
+    elif state == "header":
+        header_buffer = line
+    elif state == "data_row":
+        data_row_buffer.append(line)
+
+prefix = sys.argv[2]
+
+with open(prefix + "_oneatom.csv", "w") as f:
+    csv.writer(f).writerows(one_atom_property_table)
+
+with open(prefix + "_twoatom.csv", "w") as f:
+    csv.writer(f).writerows(two_atom_property_table)
+
+with open(prefix + "_threeatom.csv", "w") as f:
+    csv.writer(f).writerows(three_atom_property_table)
