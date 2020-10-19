@@ -5,4 +5,4 @@ However, GAMESS input files can take some effort to prepare, and AIMAll outputs 
 In this repository I will be collecting utilities I've written to make my life easier during QTAIM analysis.
 
 Currently includes a Python script for reading AIMAll mgp files and outputting critical point properties as comma separated values.
-I am working towards parsing the AIMAll sum files, and the repository includes functions for parsing the fixed-width tables they contain.
+Also includes a Python script for parsing AIMAll sum files, but the output does not yet include all tables in the sum file.
