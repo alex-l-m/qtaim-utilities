@@ -78,7 +78,7 @@ for line in open(sys.argv[1]):
             (state == "dashes_after_title" or state == "variable_description_line" or \
             state == "variable_description_interruption" or state == "possible_title"):
         state = "variable_description_line"
-    elif re.match("^Atom A", line) is not None:
+    elif re.match("^Atom", line) is not None:
         state = "header"
     elif state == "variable_description_line" or state == "variable_description_interruption":
         state = "variable_description_interruption"
