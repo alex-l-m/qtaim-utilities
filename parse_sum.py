@@ -13,6 +13,14 @@ def parse_variables(lines):
     return variable_description_dict
 
 def parse_atomic_properties(title, header, rows, variable_description_dict):
+    # Some special cases: some tables which include variables that are never
+    # given descriptions
+    if title == "Nuclear Charges and Cartesian Coordinates":
+        variable_description_dict.update(\
+                [("Charge", ""), ("X", ""), ("Y", ""), ("Z", "")])
+    elif title == "Eigenvalues and Eigenvectors of Atomic Traceless Quadrupole Moment Tensors":
+        variable_description_dict.update([("n", "")])
+
     atom_colnames = []
     for atom_colname in ["Atom", "Atom A", "Atom B", "Atom C"]:
         if atom_colname in header:
