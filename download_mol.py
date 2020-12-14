@@ -1,5 +1,6 @@
 import functools
 import sys
+import re
 from chembl_webresource_client.new_client import new_client
 from rdkit import Chem
 from rdkit.Chem import rdDistGeom
@@ -12,23 +13,27 @@ def name2mol(name):
     full_molecule.SetProp("_Name", name)
     return full_molecule
 
-example_file = { \
-        "contrl": { \
-            "runtyp": "optimize",
-            "scftyp": "rhf",
-            "aimpac": ".TRUE."
-        },
-        "basis": {\
-            "gbasis": "n31",
-            "ngauss": 6,
-            "ndfunc": 1,
-            "npfunc": 1
-        }, \
-        "statpt": {\
-            "method": "nr",
-            "opttol": "0.00001",
-            "nstep": 1000
-        }}
+def parse_inp(indir):
+    with open(indir, 'r') as f:
+        text = f.read()
+    outdict = dict()
+    text = text.replace(" =", "=").replace("= ", "=")
+    section = None
+    for token in text.split():
+        section_match = re.match(r"\$(.*)", token)
+        if token == "$END":
+            section = None
+            continue
+        if section_match is not None and section_match.group(1).upper() != "DATA":
+            section = section_match.group(1).upper()
+            outdict[section] = dict()
+            continue
+        variable_match = re.match(r"(.*)=(.*)", token)
+        if variable_match is not None and section is not None:
+            variable = variable_match.group(1).upper()
+            value = variable_match.group(2)
+            outdict[section][variable] = value
+    return outdict
 
 def dict2text(indict):
     return "\n".join(functools.reduce(list.__add__, [ \
@@ -47,5 +52,6 @@ def mol2data(mol):
     return "\n".join([" $DATA", name, "C1"] + [", ".join(line) for line in structure_csv] + [" $END", ""])
 
 inmol = name2mol(sys.argv[1])
-outfile = dict2text(example_file) + "\n" + mol2data(inmol)
+ingamess = parse_inp(sys.argv[2])
+outfile = dict2text(ingamess) + "\n" + mol2data(inmol)
 sys.stdout.write(outfile)
