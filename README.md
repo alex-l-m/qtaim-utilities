@@ -33,7 +33,8 @@ Extract atomic properties:
     python3 parse_sum.py ammonia.sum ammonia
 
 This last step generates three output files, for properties of single atoms, pairs of atoms, and triplets of atoms, respectively.
-The file names are constructed from a given prefix (the second argument), plus suffixes "\_oneatom.csv", "\_twoatom.csv", and "\_threeatom.csv".
+The file names are constructed from a given prefix (the second argument), plus suffixes "\_oneatom.csv", "\_twoatom.csv", "\_threeatom.csv", and "\_3d.csv".
 The columns are a column containing the name of the table from the AIMAll ".sum" file, columns containing the atom names, a column containing the name of the property, and a column containing the value of the property.
+Except the "\_3d" file, which instead of a second atom name, has a column "n", containing a number from 1 to 3 representing the order of the eigenvalue for a 3D tensor.
 No header is included.
-Currently, not all tables from the ".sum" file are captured.
+Currently, not all tables from the ".sum" file are captured, and some are captured improperly.
