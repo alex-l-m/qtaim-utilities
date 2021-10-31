@@ -4,14 +4,33 @@ import re
 from chembl_webresource_client.new_client import new_client
 from rdkit import Chem
 from rdkit.Chem import rdDistGeom
+from os.path import splitext, basename
 
-def name2mol(name):
+def download_mol(name):
     smiles = new_client.molecule.search(name)[0]["molecule_structures"]["canonical_smiles"]
     partial_molecule = Chem.MolFromSmiles(smiles)
     full_molecule = Chem.AddHs(partial_molecule)
     Chem.rdDistGeom.EmbedMolecule(full_molecule)
     full_molecule.SetProp("_Name", name)
     return full_molecule
+
+def read_mol(filename):
+    if re.search(r"\.mol$", filename) is not None:
+        name = splitext(basename(filename))[0]
+        mol = Chem.MolFromMolFile(filename, sanitize = False, removeHs = False)
+        if mol.GetProp("_Name") == "":
+            mol.SetProp("_Name", name)
+    else:
+        raise ValueError("Only .mol files currently supported")
+    return mol
+
+def name2mol(name):
+    # Decide whether input is a file to load, or the name of a molecule to download
+    if "." in name:
+        inmol = read_mol(name)
+    else:
+        inmol = download_mol(name)
+    return inmol
 
 def parse_inp(indir):
     with open(indir, 'r') as f:

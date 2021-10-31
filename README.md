@@ -8,9 +8,10 @@ My workflow is as follows.
 
 Create a GAMESS input file for a molecule, by downloading the structure from ChEMBL (which yields a graph representation), and generating atom coordinates with RDKit:
 
-    python3 download_mol.py ammonia example.inp > ammonia.inp
+    python3 create_gamess_inp.py ammonia example.inp > ammonia.inp
 
 The first argument is the name of the molecule (used as a ChEMBL query), and the second argument is a previously made GAMESS input, from which the settings will be copied.
+If the first argument ends in ".mol", it will instead be interpreted as a path, and the molecule will be loaded from the specified file rather than downloaded.
 
 Then, using my GAMESS installation, run GAMESS to get a wavefunction, stored in a ".dat" file:
 
