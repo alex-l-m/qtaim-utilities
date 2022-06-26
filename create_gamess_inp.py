@@ -10,14 +10,16 @@ def download_mol(name):
     smiles = new_client.molecule.search(name)[0]["molecule_structures"]["canonical_smiles"]
     partial_molecule = Chem.MolFromSmiles(smiles)
     full_molecule = Chem.AddHs(partial_molecule)
-    Chem.rdDistGeom.EmbedMolecule(full_molecule)
     full_molecule.SetProp("_Name", name)
     return full_molecule
 
 def read_mol(filename):
     if re.search(r"\.mol$", filename) is not None:
         name = splitext(basename(filename))[0]
-        mol = Chem.MolFromMolFile(filename, sanitize = False, removeHs = False)
+        # Need to sanitize or I get an error that says
+        # getNumImplicitHs() called without preceding call to calcImplicitValence()
+        # when I do EmbedMolecule
+        mol = Chem.MolFromMolFile(filename, sanitize = True, removeHs = False)
         if mol.GetProp("_Name") == "":
             mol.SetProp("_Name", name)
     else:
@@ -71,6 +73,7 @@ def mol2data(mol):
     return "\n".join([" $DATA", name, "C1"] + [", ".join(line) for line in structure_csv] + [" $END", ""])
 
 inmol = name2mol(sys.argv[1])
+Chem.rdDistGeom.EmbedMolecule(inmol)
 ingamess = parse_inp(sys.argv[2])
 outfile = dict2text(ingamess) + "\n" + mol2data(inmol)
 sys.stdout.write(outfile)
