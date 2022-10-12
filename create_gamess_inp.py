@@ -1,8 +1,6 @@
 import functools
 import sys
 import re
-from rdkit import Chem
-from rdkit.Chem import rdDistGeom
 from os.path import splitext, basename
 # The chembl client requires an internet connection just to import it
 # Try the import, but continue running if it can't be imported
@@ -12,6 +10,9 @@ try:
     chembl_connected = True
 except requests.exceptions.ConnectionError:
     chembl_connected = False
+from rdkit import Chem
+from xtb.ase.calculator import XTB
+from annotate_rdkit_with_ase import optimize_geometry
 
 def download_mol(name):
     # Check if chembl client was successfully imported. It won't import without
@@ -86,7 +87,9 @@ def mol2data(mol):
     return "\n".join([" $DATA", name, "C1"] + [", ".join(line) for line in structure_csv] + [" $END", ""])
 
 inmol = name2mol(sys.argv[1])
-Chem.rdDistGeom.EmbedMolecule(inmol)
+# Add a geometry only if one is not already present
+if inmol.GetNumConformers() == 0:
+    optimize_geometry(XTB(), inmol)
 ingamess = parse_inp(sys.argv[2])
 outfile = dict2text(ingamess) + "\n" + mol2data(inmol)
 sys.stdout.write(outfile)
