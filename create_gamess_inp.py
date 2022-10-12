@@ -1,12 +1,23 @@
 import functools
 import sys
 import re
-from chembl_webresource_client.new_client import new_client
 from rdkit import Chem
 from rdkit.Chem import rdDistGeom
 from os.path import splitext, basename
+# The chembl client requires an internet connection just to import it
+# Try the import, but continue running if it can't be imported
+import requests.exceptions
+try:
+    from chembl_webresource_client.new_client import new_client
+    chembl_connected = True
+except requests.exceptions.ConnectionError:
+    chembl_connected = False
 
 def download_mol(name):
+    # Check if chembl client was successfully imported. It won't import without
+    # an internet connection
+    if not chembl_connected:
+        raise requests.exceptions.ConnectionError("Connection error when importing chembl client")
     smiles = new_client.molecule.search(name)[0]["molecule_structures"]["canonical_smiles"]
     partial_molecule = Chem.MolFromSmiles(smiles)
     full_molecule = Chem.AddHs(partial_molecule)
