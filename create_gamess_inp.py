@@ -14,16 +14,18 @@ def download_mol(name):
     return full_molecule
 
 def read_mol(filename):
-    if re.search(r"\.mol$", filename) is not None:
-        name = splitext(basename(filename))[0]
-        # Need to sanitize or I get an error that says
-        # getNumImplicitHs() called without preceding call to calcImplicitValence()
-        # when I do EmbedMolecule
+    name, extension = splitext(basename(filename))
+    # Need to sanitize or I get an error that says
+    # getNumImplicitHs() called without preceding call to calcImplicitValence()
+    # when I do EmbedMolecule
+    if extension == ".mol":
         mol = Chem.MolFromMolFile(filename, sanitize = True, removeHs = False)
-        if mol.GetProp("_Name") == "":
-            mol.SetProp("_Name", name)
+    elif extension == ".mol2":
+        mol = Chem.MolFromMol2File(filename, sanitize = True, removeHs = False)
     else:
-        raise ValueError("Only .mol files currently supported")
+        raise ValueError("Only .mol and .mol2 files currently supported")
+    if mol.GetProp("_Name") == "":
+        mol.SetProp("_Name", name)
     return mol
 
 def name2mol(name):
