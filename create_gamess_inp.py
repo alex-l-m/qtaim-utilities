@@ -86,10 +86,11 @@ def mol2data(mol):
             for i, symbol, atomic_number, coords in zip(range(len(atom_coords)), atom_symbols, atom_atomic_numbers, atom_coords)]
     return "\n".join([" $DATA", name, "C1"] + [", ".join(line) for line in structure_csv] + [" $END", ""])
 
-inmol = name2mol(sys.argv[1])
-# Add a geometry only if one is not already present
-if inmol.GetNumConformers() == 0:
-    optimize_geometry(XTB(), inmol)
-ingamess = parse_inp(sys.argv[2])
-outfile = dict2text(ingamess) + "\n" + mol2data(inmol)
-sys.stdout.write(outfile)
+if __name__ == "__main__":
+    inmol = name2mol(sys.argv[1])
+    # Add a geometry only if one is not already present
+    if inmol.GetNumConformers() == 0:
+        optimize_geometry(XTB(), inmol)
+    ingamess = parse_inp(sys.argv[2])
+    outfile = dict2text(ingamess) + "\n" + mol2data(inmol)
+    sys.stdout.write(outfile)
