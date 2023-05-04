@@ -39,3 +39,17 @@ The columns are a column containing the name of the table from the AIMAll ".sum"
 Except the "\_3d" file, which instead of a second atom name, has a column "n", containing a number from 1 to 3 representing the order of the eigenvalue for a 3D tensor.
 No header is included.
 Currently, not all tables from the ".sum" file are captured, and some are captured improperly.
+
+There's also a script to convert tables of critical points to tables readable with [Cauldronoid](https://github.com/alex-l-m/cauldronoid).
+This is useful when using QTAIM input to infer bonds from DFT output.
+However, it currently does not include estimation of bond order, which more properly would use delocalization index.
+All bonds are of type "UNSPECIFIED".
+This may be replaced in the future with a script that uses the processing from the sum files.
+Input files must be named "{mol_id}_critpoints.csv".
+Running the script as
+
+    Rscript critpoints2cauldronoid.R indir
+
+will read all files in "indir" and output tables "critpoint_mol_tbl.csv.gz", "critpoint_one_tbl.csv.gz", and "critpoint_two_tbl.csv.gz".
+These tables have a column "critical_point" which can be used to join information from the original critical point tables.
+Or, using the "atom_id" column in the one atom table and the "start_atom" and "end_atom" columns in the two atom table, information from the sum files can be joined.
