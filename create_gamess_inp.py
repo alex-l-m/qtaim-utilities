@@ -30,13 +30,20 @@ def read_mol(filename):
     # Need to sanitize or I get an error that says
     # getNumImplicitHs() called without preceding call to calcImplicitValence()
     # when I do EmbedMolecule
-    if extension == ".mol":
+    # However there's no need to sanitize an XYZ, since it contains a geometry
+    # MolFromXYZFile doesn't have a sanitize argument anyway
+    print(filename)
+    if extension == ".xyz":
+        mol = Chem.MolFromXYZFile(filename)
+        # Don't assign a name
+        # xyz files have a comment line, but it's not guaranteed to be a name
+    elif extension == ".mol":
         mol = Chem.MolFromMolFile(filename, sanitize = True, removeHs = False)
     elif extension == ".mol2":
         mol = Chem.MolFromMol2File(filename, sanitize = True, removeHs = False)
     else:
-        raise ValueError("Only .mol and .mol2 files currently supported")
-    if mol.GetProp("_Name") == "":
+        raise ValueError("Only .xyz, .mol and .mol2 files currently supported")
+    if not mol.HasProp("_Name") or mol.GetProp("_Name") == "":
         mol.SetProp("_Name", name)
     return mol
 
