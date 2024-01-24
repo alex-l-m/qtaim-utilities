@@ -82,6 +82,9 @@ def mol2data(mol):
     atom_coords = mol.GetConformers()[0].GetPositions().tolist()
     atom_symbols = [i.GetSymbol() for i in mol.GetAtoms()]
     atom_atomic_numbers = [i.GetAtomicNum() for i in mol.GetAtoms()]
+    return atoms2data(name, atom_coords, atom_symbols, atom_atomic_numbers)
+
+def atoms2data(name, atom_coords, atom_symbols, atom_atomic_numbers):
     structure_csv = [("{}{}".format(symbol, i), str(atomic_number), str(coords[0]), str(coords[1]), str(coords[2])) \
             for i, symbol, atomic_number, coords in zip(range(len(atom_coords)), atom_symbols, atom_atomic_numbers, atom_coords)]
     return "\n".join([" $DATA", name, "C1"] + [", ".join(line) for line in structure_csv] + [" $END", ""])
